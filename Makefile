@@ -10,3 +10,6 @@ install:
 
 run:
 	uv run src/main.py
+
+run-docker:
+	docker compose up -d

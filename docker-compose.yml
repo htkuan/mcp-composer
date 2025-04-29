@@ -1,0 +1,18 @@
+services:
+  mcp-composer:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - MCP_SERVERS_CONFIG_PATH=/app/mcp_servers.json
+      - MCP_COMPOSER_PROXY_URL=http://localhost:8000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

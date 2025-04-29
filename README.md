@@ -31,7 +31,7 @@ MCP Composer is a gateway service that **centrally manages** all your MCP server
 *   [uv](https://github.com/astral-sh/uv): A fast Python package installer and manager.
 
 ## Installation
-
+### Method 1:
 1.  **Clone the repository**:
     ```bash
     git clone https://github.com/htkuan/mcp-composer
@@ -45,6 +45,12 @@ MCP Composer is a gateway service that **centrally manages** all your MCP server
     # or directly use uv
     # uv sync
     ```
+### Method 2:
+ use docker compose to run the project
+
+```bash
+make run-docker
+```
 
 ## Configuration
 

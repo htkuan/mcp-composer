@@ -94,11 +94,11 @@ class Config:
                 command = config_data.get("command")
                 args = config_data.get("args", [])
                 env = config_data.get("env")
+                url = config_data.get("url")
 
-                if not command:
-                    # Warn and skip if the essential 'command' field is missing
+                if not command and not url:
                     config_logger.warning(
-                        f"Server '{name}' is missing the 'command' field and will be skipped."
+                        f"Server '{name}' is missing both 'command' and 'url' fields and will be skipped."
                     )
                     continue
 
@@ -106,7 +106,7 @@ class Config:
                 # if DownstreamMCPServerConfig requires them.
 
                 c = DownstreamMCPServerConfig(
-                    name=name, command=command, args=args, env=env
+                    name=name, command=command, args=args, env=env, url=url
                 )
                 configs.append(c)
 
