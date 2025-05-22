@@ -58,3 +58,44 @@ class DownstreamController:
         self, server_control_name: str
     ) -> DownstreamMCPServer:
         return self._servers_map[server_control_name]
+
+    async def add_server(self, config: DownstreamMCPServerConfig):
+        """Adds a new downstream server to the controller."""
+        async with self._asyncio_lock:
+            # TODO: Add logging
+            # print(f"Adding server: {config.control_name}") 
+            server = DownstreamMCPServer(config)
+            await server.initialize(self.exit_stack)
+            self._servers_map[server.get_control_name()] = server
+            tools = await server.list_tools()
+            self._all_servers_tools.append((server, tools))
+            for tool in tools:
+                self._tools_map[tool.control_name] = tool
+            # print(f"Server {config.control_name} added successfully.")
+
+    async def remove_server(self, server_control_name: str):
+        """Removes a downstream server from the controller."""
+        async with self._asyncio_lock:
+            # TODO: Add logging
+            # print(f"Removing server: {server_control_name}")
+            if server_control_name not in self._servers_map:
+                # print(f"Server {server_control_name} not found.")
+                return
+
+            server = self._servers_map.pop(server_control_name)
+            await server.shutdown()
+
+            # Remove server and its tools from self._all_servers_tools
+            self._all_servers_tools = [
+                (s, t) for s, t in self._all_servers_tools if s != server
+            ]
+
+            # Remove tools associated with this server from self._tools_map
+            # Assuming tools are unique to the server, or handled if not.
+            # This needs to be done carefully if tool names can overlap across servers.
+            # For now, assuming tool_control_name is globally unique as per current structure.
+            tools_to_remove = await server.list_tools() # Re-list or store them initially
+            for tool in tools_to_remove:
+                if tool.control_name in self._tools_map:
+                    del self._tools_map[tool.control_name]
+            # print(f"Server {server_control_name} removed successfully.")

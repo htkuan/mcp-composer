@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     # FastAPI server start
     downstream_controller = DownstreamController(config.servers)
     await downstream_controller.initialize()
+    app.state.downstream_controller = downstream_controller
 
     # Initialize and store in app.state after controller is ready
     # Pass config to Composer

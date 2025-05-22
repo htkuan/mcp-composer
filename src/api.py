@@ -107,3 +107,73 @@ async def remove_gateway(request: Request, name: str) -> GatewayResponse:
     composer: Composer = request.app.state.composer
     gateway = await composer.remove_gateway(name)
     return new_gateway_response(gateway)
+
+
+# Server Management Endpoints
+import logging
+from fastapi import HTTPException, status
+from downstream_controller import DownstreamController
+from domain.downstream_server import DownstreamMCPServerConfig
+
+logger = logging.getLogger(__name__)
+
+servers_router = APIRouter(prefix="/servers", tags=["servers"])
+
+
+@servers_router.post("/", status_code=status.HTTP_201_CREATED)
+async def add_new_server(config: DownstreamMCPServerConfig, request: Request):
+    controller: DownstreamController = request.app.state.downstream_controller
+    try:
+        # Check if server already exists
+        try:
+            # Use config.name as per DownstreamMCPServerConfig model
+            controller.get_server_by_control_name(config.name) 
+            logger.warning(f"Attempted to add duplicate server: {config.name}")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Server with control name '{config.name}' already exists.",
+            )
+        except KeyError:
+            # Server does not exist, proceed to add
+            pass
+
+        await controller.add_server(config)
+        logger.info(f"Server '{config.name}' added successfully.")
+        return {"message": f"Server '{config.name}' added successfully."}
+    except HTTPException: # Specifically catch HTTPException and re-raise
+        raise
+    except Exception as e:
+        logger.error(f"Error adding server '{config.name}': {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while adding server '{config.name}'.",
+        )
+
+
+@servers_router.delete("/{server_control_name}", status_code=status.HTTP_200_OK)
+async def remove_existing_server(server_control_name: str, request: Request):
+    controller: DownstreamController = request.app.state.downstream_controller
+    try:
+        # Check if server exists before attempting removal
+        try:
+            controller.get_server_by_control_name(server_control_name)
+        except KeyError:
+            logger.warning(f"Attempted to remove non-existent server: {server_control_name}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Server with control name '{server_control_name}' not found.",
+            )
+
+        await controller.remove_server(server_control_name)
+        logger.info(f"Server '{server_control_name}' removed successfully.")
+        return {"message": f"Server '{server_control_name}' removed successfully."}
+    except HTTPException:
+        raise # Re-raise HTTPException directly
+    except Exception as e:
+        logger.error(f"Error removing server '{server_control_name}': {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while removing server '{server_control_name}'.",
+        )
+
+v1_api_router.include_router(servers_router)

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Dict, Optional
-from enum import StrEnum
+from enum import Enum # Changed from StrEnum
 from mcp.types import Tool
 from mcp.client.sse import sse_client
 from mcp import ClientSession, StdioServerParameters, stdio_client
@@ -9,7 +9,7 @@ from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStre
 from contextlib import AsyncExitStack
 
 
-class ConnectionType(StrEnum):
+class ConnectionType(str, Enum): # Changed from StrEnum
     STDIO = "stdio"
     SSE = "sse"
 
