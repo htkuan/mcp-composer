@@ -1,12 +1,14 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
 import uvicorn
-from downstream_controller import DownstreamController
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+
+from api import v1_api_router
 from composer import Composer
 from config import Config, setup_logging
-from api import v1_api_router
+from downstream_controller import DownstreamController
 
 # Setup logging as early as possible
 setup_logging()

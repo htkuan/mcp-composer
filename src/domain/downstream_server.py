@@ -1,12 +1,12 @@
 import logging
-from pydantic import BaseModel
-from typing import Any, Dict, Optional
+from contextlib import AsyncExitStack
 from enum import StrEnum
+from typing import Any
+
 from mcp import Client, StdioServerParameters
 from mcp.client.sse import sse_client
 from mcp.types import CallToolResult, Tool
-from typing import List
-from contextlib import AsyncExitStack
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +25,15 @@ DownstreamMCPServerToolName = str
 class DownstreamMCPServerConfig(BaseModel):
     name: DownstreamMCPServerName
     # 連接類型，未指定時由 command / url 推斷
-    type: Optional[ConnectionType] = None
+    type: ConnectionType | None = None
 
     # stdio 類型的連接配置
-    command: Optional[str] = None
-    args: Optional[list] = None
-    env: Optional[Dict] = None
+    command: str | None = None
+    args: list | None = None
+    env: dict | None = None
 
     # streamable http / sse 類型的連接配置
-    url: Optional[str] = None
+    url: str | None = None
 
     def get_connection_type(self) -> ConnectionType:
         if self.type:
@@ -121,13 +121,13 @@ class DownstreamMCPServer:
         assert self._control_name, f"Server {self.config.name} not _control_name"
         return self._control_name
 
-    async def list_tools(self) -> List[DownstreamMCPServerTool]:
+    async def list_tools(self) -> list[DownstreamMCPServerTool]:
         assert self._control_name, f"Server {self.config.name} not _control_name"
 
         if not self.client:
             raise ValueError("Server not initialized")
 
-        tools: List[Tool] = []
+        tools: list[Tool] = []
         cursor: str | None = None
         while True:
             list_tools_result = await self.client.list_tools(cursor=cursor)

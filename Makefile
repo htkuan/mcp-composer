@@ -1,8 +1,8 @@
 .PHONY: format install run
 
 format:
-	ruff format ./src
-	ruff check ./src --fix
+	uv run ruff format ./src
+	uv run ruff check ./src --fix
 
 install:
 	@command -v uv >/dev/null 2>&1 || pip install uv

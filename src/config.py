@@ -1,12 +1,12 @@
-import os
 import json
 import logging
+import os
 import sys
 from pathlib import Path
-from typing import List
+
+from dotenv import load_dotenv
 
 from domain.downstream_server import DownstreamMCPServerConfig
-from dotenv import load_dotenv
 
 # load .env file
 load_dotenv()
@@ -66,12 +66,12 @@ class Config:
         self.config_json_path = self._get_config_path(
             "MCP_SERVERS_CONFIG_PATH", self._DEFAULT_CONFIG_PATH
         )
-        self.servers: List[DownstreamMCPServerConfig] = (
+        self.servers: list[DownstreamMCPServerConfig] = (
             self._load_mcp_servers_config_from_json()
         )
         # Read host and port from environment variables with defaults
         self.host = os.environ.get("HOST", "0.0.0.0")
-        self.port = int(os.environ.get("PORT", 8000))
+        self.port = int(os.environ.get("PORT", "8000"))
         # Read MCP Composer proxy URL from environment variable
         self.mcp_composer_proxy_url = os.environ.get(
             "MCP_COMPOSER_PROXY_URL", "http://localhost:8000"
@@ -82,7 +82,7 @@ class Config:
         config_path_str = os.environ.get(env_var, default_path)
         return Path(config_path_str)
 
-    def _load_mcp_servers_config_from_json(self) -> List[DownstreamMCPServerConfig]:
+    def _load_mcp_servers_config_from_json(self) -> list[DownstreamMCPServerConfig]:
         """Loads MCP server configurations from the configuration file path."""
         configs = []
         try:
@@ -124,9 +124,9 @@ class Config:
             config_logger.error(
                 f"Failed to parse configuration file: {self.config_json_path}"
             )
-        except Exception as e:
+        except Exception:
             config_logger.exception(  # Use logger.exception to include traceback
-                f"An unexpected error occurred while reading the configuration file {self.config_json_path}: {e}"
+                f"An unexpected error occurred while reading the configuration file {self.config_json_path}"
             )
 
         return configs

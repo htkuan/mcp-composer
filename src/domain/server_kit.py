@@ -1,14 +1,13 @@
-from typing import List, Dict
 from pydantic import BaseModel
 
 
 class ServerKit(BaseModel):
     name: str
     enabled: bool
-    servers_enabled: Dict[str, bool]
-    tools_enabled: Dict[str, bool]
-    servers_tools_hierarchy_map: Dict[str, List[str]]
-    tools_servers_map: Dict[str, str]
+    servers_enabled: dict[str, bool]
+    tools_enabled: dict[str, bool]
+    servers_tools_hierarchy_map: dict[str, list[str]]
+    tools_servers_map: dict[str, str]
 
     @classmethod
     def new_server_kit(cls, name: str) -> "ServerKit":
@@ -21,7 +20,7 @@ class ServerKit(BaseModel):
             tools_servers_map={},
         )
 
-    def list_enabled_tool_names(self) -> List[str]:
+    def list_enabled_tool_names(self) -> list[str]:
         tool_names = []
         for tool_name, enabled in self.tools_enabled.items():
             server_name = self.tools_servers_map[tool_name]

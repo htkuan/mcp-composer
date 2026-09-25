@@ -1,20 +1,21 @@
 from contextlib import asynccontextmanager
-from typing import Dict, List
+
 import anyio
 from anyio.abc import TaskGroup
+from fastapi import FastAPI
+from starlette.routing import Mount
+
+from config import Config
 from domain.server_kit import ServerKit
 from downstream_controller import DownstreamController
-from fastapi import FastAPI
 from gateway import Gateway
-from config import Config
-from starlette.routing import Mount
 
 
 class Composer:
     def __init__(self, downstream_controller: DownstreamController, config: Config):
-        self.server_kits_map: Dict[str, ServerKit] = {}
+        self.server_kits_map: dict[str, ServerKit] = {}
         self.downstream_controller = downstream_controller
-        self.gateway_map: Dict[str, Gateway] = {}
+        self.gateway_map: dict[str, Gateway] = {}
         self._asgi_app = FastAPI()
         self.config = config
         self._task_group: TaskGroup | None = None
@@ -35,7 +36,7 @@ class Composer:
 
     # APIs
     # ServerKit
-    async def list_server_kits(self) -> List[ServerKit]:
+    async def list_server_kits(self) -> list[ServerKit]:
         return list(self.server_kits_map.values())
 
     async def get_server_kit(self, name: str) -> ServerKit:
@@ -97,7 +98,7 @@ class Composer:
         return server_kit
 
     # Gateway
-    async def list_gateways(self) -> List[Gateway]:
+    async def list_gateways(self) -> list[Gateway]:
         return list(self.gateway_map.values())
 
     async def get_gateway(self, name: str) -> Gateway:

@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Request
-from typing import List
+from pydantic import BaseModel
+
 from composer import Composer
 from domain.server_kit import ServerKit
-from pydantic import BaseModel
 from gateway import Gateway
 
 v1_api_router = APIRouter(prefix="/api/v1")
 
 
 @v1_api_router.get("/kits")
-async def list_server_kits(request: Request) -> List[ServerKit]:
+async def list_server_kits(request: Request) -> list[ServerKit]:
     composer: Composer = request.app.state.composer
     return await composer.list_server_kits()
 
@@ -74,7 +74,7 @@ def new_gateway_response(gateway: Gateway) -> GatewayResponse:
 
 
 @v1_api_router.get("/gateways")
-async def list_gateways(request: Request) -> List[GatewayResponse]:
+async def list_gateways(request: Request) -> list[GatewayResponse]:
     composer: Composer = request.app.state.composer
     gateways = await composer.list_gateways()
     return [new_gateway_response(gateway) for gateway in gateways]

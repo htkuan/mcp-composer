@@ -1,20 +1,20 @@
-from domain.downstream_server import (
-    DownstreamMCPServerConfig,
-    DownstreamMCPServer,
-    DownstreamMCPServerTool,
-)
-from typing import Dict, List, Tuple
 import asyncio
 from contextlib import AsyncExitStack
 
+from domain.downstream_server import (
+    DownstreamMCPServer,
+    DownstreamMCPServerConfig,
+    DownstreamMCPServerTool,
+)
+
 
 class DownstreamController:
-    def __init__(self, configs: List[DownstreamMCPServerConfig]):
-        self._all_servers_tools: List[
-            Tuple[DownstreamMCPServer, List[DownstreamMCPServerTool]]
+    def __init__(self, configs: list[DownstreamMCPServerConfig]):
+        self._all_servers_tools: list[
+            tuple[DownstreamMCPServer, list[DownstreamMCPServerTool]]
         ] = []
-        self._servers_map: Dict[str, DownstreamMCPServer] = {}
-        self._tools_map: Dict[str, DownstreamMCPServerTool] = {}
+        self._servers_map: dict[str, DownstreamMCPServer] = {}
+        self._tools_map: dict[str, DownstreamMCPServerTool] = {}
         self._asyncio_lock = asyncio.Lock()
         self.configs = configs
         self.exit_stack = AsyncExitStack()
@@ -46,7 +46,7 @@ class DownstreamController:
 
     def list_all_servers_tools(
         self,
-    ) -> List[Tuple[DownstreamMCPServer, List[DownstreamMCPServerTool]]]:
+    ) -> list[tuple[DownstreamMCPServer, list[DownstreamMCPServerTool]]]:
         return self._all_servers_tools
 
     def get_tool_by_control_name(
