@@ -5,13 +5,15 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      # Keep the image's virtualenv instead of the host's .venv from the bind mount
+      - /app/.venv
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - MCP_SERVERS_CONFIG_PATH=/app/mcp_servers.json
       - MCP_COMPOSER_PROXY_URL=http://localhost:8000
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
