@@ -46,11 +46,7 @@ MCP Composer is a gateway service that **centrally manages** all your MCP server
     # uv sync
     ```
 ### Method 2:
- use docker compose to run the project
-
-```bash
-make run-docker
-```
+Use Docker Compose instead of a local Python/uv setup; see [Running with Docker Compose](#running-with-docker-compose).
 
 ## Configuration
 
@@ -92,6 +88,39 @@ Each gateway exposes two MCP endpoints (the default gateway is named `composer`)
 *   **Streamable HTTP** (recommended): `http://127.0.0.1:8000/mcp/{gateway_name}/mcp`
 *   **SSE** (legacy): `http://127.0.0.1:8000/mcp/{gateway_name}/sse`
 
+## Running with Docker Compose
+
+The Docker image bundles Python, `uv`/`uvx`, Node.js/`npx`, and the Docker CLI, so stdio servers started with `uvx`, `npx`, or `docker run` work inside the container.
+
+1.  Create `mcp_servers.json` as described in [Configuration](#configuration). The project directory is mounted into the container, so the file is read from `/app/mcp_servers.json`.
+
+2.  Build and start the service:
+    ```bash
+    make run-docker
+    # or directly use docker compose
+    # docker compose up -d --build
+    ```
+    After pulling new changes, run `docker compose up -d --build` to rebuild the image.
+
+3.  Check the status and logs:
+    ```bash
+    docker compose ps                    # STATUS shows "(healthy)" once the service is ready
+    docker compose logs -f mcp-composer  # shows which downstream servers connected
+    ```
+    The UI, API documentation, and gateway endpoints are available at the same URLs as in [Running](#running).
+
+4.  Stop the service:
+    ```bash
+    docker compose down
+    ```
+
+Notes:
+
+*   **Code changes**: `src/` is mounted from your working copy, so run `docker compose restart` to apply code or `mcp_servers.json` changes without rebuilding.
+*   **Reaching services on your machine**: inside the container, `localhost` refers to the container itself. Use `host.docker.internal` instead, e.g. `"url": "http://host.docker.internal:8001/mcp"`. This also applies to containers started by `docker run` entries. On Linux, add `extra_hosts: ["host.docker.internal:host-gateway"]` to the service in `docker-compose.yml`.
+*   **Docker-based MCP servers**: the host's Docker socket is mounted, so `"command": "docker"` entries start sibling containers on your host. This gives the container full access to your Docker daemon.
+*   **Environment variables**: `MCP_SERVERS_CONFIG_PATH` and `MCP_COMPOSER_PROXY_URL` are set in `docker-compose.yml` and take precedence over `.env`. The published port is fixed to `8000:8000`; if you change `PORT`, update `ports` as well.
+
 ## Development
 
 The project includes a `Makefile` to simplify common development tasks:
@@ -99,6 +128,7 @@ The project includes a `Makefile` to simplify common development tasks:
 *   **Install dependencies**: `make install`
 *   **Format and check code**: `make format` (using Ruff)
 *   **Run the application**: `make run`
+*   **Run with Docker Compose**: `make run-docker`
 
 ## Contributing
 
