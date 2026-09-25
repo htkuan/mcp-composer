@@ -24,11 +24,12 @@ async def lifespan(app: FastAPI):
     # Pass config to Composer
     composer = Composer(downstream_controller, config)
     app.state.composer = composer
-    server_kit = composer.create_server_kit("composer")
-    await composer.add_gateway(server_kit)
-    app.mount("/mcp/", app.state.composer.asgi_gateway_routes())
+    async with composer.run():
+        server_kit = composer.create_server_kit("composer")
+        await composer.add_gateway(server_kit)
+        app.mount("/mcp/", app.state.composer.asgi_gateway_routes())
 
-    yield
+        yield
     # FastAPI server shutdown
     await downstream_controller.shutdown()
 

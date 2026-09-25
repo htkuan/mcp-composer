@@ -1,4 +1,7 @@
+from contextlib import asynccontextmanager
 from typing import Dict, List
+import anyio
+from anyio.abc import TaskGroup
 from domain.server_kit import ServerKit
 from downstream_controller import DownstreamController
 from fastapi import FastAPI
@@ -14,6 +17,18 @@ class Composer:
         self.gateway_map: Dict[str, Gateway] = {}
         self._asgi_app = FastAPI()
         self.config = config
+        self._task_group: TaskGroup | None = None
+
+    @asynccontextmanager
+    async def run(self):
+        """Hosts the gateways' background tasks; gateways can only be added while running."""
+        async with anyio.create_task_group() as tg:
+            self._task_group = tg
+            try:
+                yield
+            finally:
+                tg.cancel_scope.cancel()
+                self._task_group = None
 
     def asgi_gateway_routes(self):
         return self._asgi_app
@@ -91,12 +106,14 @@ class Composer:
     async def add_gateway(self, server_kit: ServerKit):
         if server_kit.name in self.gateway_map:
             raise ValueError(f"Gateway {server_kit.name} already exists")
+        if self._task_group is None:
+            raise RuntimeError("Composer is not running")
         gateway = Gateway(
             server_kit,
             self.downstream_controller,
             self.config.mcp_composer_proxy_url,
         )
-        await gateway.setup()
+        await self._task_group.start(gateway.run)
         self.gateway_map[server_kit.name] = gateway
         self._asgi_app.mount(f"/{server_kit.name}", gateway.as_asgi_route())
         return gateway
@@ -127,4 +144,5 @@ class Composer:
         # Remove the gateway from the map
         gateway = self.gateway_map[name]
         del self.gateway_map[name]
+        gateway.stop()
         return gateway

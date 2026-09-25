@@ -60,6 +60,7 @@ async def enable_tool(request: Request, name: str, tool_name: str) -> ServerKit:
 class GatewayResponse(BaseModel):
     name: str
     gateway_endpoint: str
+    sse_endpoint: str
     server_kit: ServerKit
 
 
@@ -67,6 +68,7 @@ def new_gateway_response(gateway: Gateway) -> GatewayResponse:
     return GatewayResponse(
         name=gateway.name,
         gateway_endpoint=gateway.gateway_endpoint,
+        sse_endpoint=gateway.sse_endpoint,
         server_kit=gateway.server_kit,
     )
 

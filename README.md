@@ -7,9 +7,9 @@ MCP Composer is a gateway service that **centrally manages** all your MCP server
 ## Key Features
 
 *   **Dynamic MCP Server Management**: Dynamically manages connections to multiple MCP servers and their tools, enabling on-the-fly activation or deactivation of services.
-*   **Unified SSE Interface**: Exposes a single Server-Sent Events (SSE) interface that provides access to all capabilities of the managed MCP servers.
-*   **Multiple Dynamic Endpoints**: Supports dynamic creation and removal of multiple SSE endpoints to accommodate different AI agents or AI tools.
-*   **Independent Interface Configuration**: Each SSE interface independently manages its own combination of MCP servers and tools, allowing for customized service provision.
+*   **Unified MCP Endpoint**: Exposes a single Streamable HTTP endpoint (supporting the latest MCP protocol `2026-07-28` as well as earlier revisions) that provides access to all capabilities of the managed MCP servers. A legacy SSE endpoint is also available for clients that do not support Streamable HTTP yet.
+*   **Multiple Dynamic Endpoints**: Supports dynamic creation and removal of multiple gateway endpoints to accommodate different AI agents or AI tools.
+*   **Independent Interface Configuration**: Each gateway independently manages its own combination of MCP servers and tools, allowing for customized service provision.
 
 ## System Architecture
 
@@ -61,6 +61,9 @@ Before running the application, you need to configure the target MCP servers.
     cp mcp_servers.example.json mcp_servers.json
     ```
 2.  Edit `mcp_servers.json` and enter the details of the MCP servers you want to connect to.
+    - Local servers use `command` / `args` / `env` (stdio transport).
+    - Remote servers use `url`. By default the Streamable HTTP transport is tried first, falling back to the legacy SSE transport. Set `"type": "http"` or `"type": "sse"` to force a specific transport.
+    - The latest protocol version supported by each downstream server is negotiated automatically, so servers built with older MCP SDKs keep working.
 
 3.  Set up environment variables:
     ```bash
@@ -83,6 +86,11 @@ make run
 ```
 
 After the service starts, you can interact with the API through the API documentation in your browser (typically at `http://127.0.0.1:8000/docs`).
+
+Each gateway exposes two MCP endpoints (the default gateway is named `composer`):
+
+*   **Streamable HTTP** (recommended): `http://127.0.0.1:8000/mcp/{gateway_name}/mcp`
+*   **SSE** (legacy): `http://127.0.0.1:8000/mcp/{gateway_name}/sse`
 
 ## Development
 

@@ -928,43 +928,47 @@
 
             const paths = document.createElement('div');
             paths.className = 'gateway-paths';
-            
+
             // Create endpoint row with copy button and endpoint
-            const endpointRow = document.createElement('div');
-            endpointRow.className = 'endpoint-row';
-            
-            // Create endpoint text with embedded copy button
-            const endpointText = document.createElement('div');
-            endpointText.className = 'endpoint-text';
-            
-            // Create copy button
-            const copyEndpointBtn = document.createElement('button');
-            copyEndpointBtn.className = 'copy-endpoint-btn';
-            copyEndpointBtn.textContent = 'Copy';
-            copyEndpointBtn.onclick = (e) => {
-                e.stopPropagation(); // Prevent event bubbling
-                navigator.clipboard.writeText(gateway.gateway_endpoint)
-                    .then(() => showNotification('Endpoint copied to clipboard!', 'success', 2000))
-                    .catch(err => showNotification('Failed to copy: ' + err, 'error', 3000));
+            const createEndpointRow = (label, endpoint) => {
+                const endpointRow = document.createElement('div');
+                endpointRow.className = 'endpoint-row';
+
+                // Create endpoint text with embedded copy button
+                const endpointText = document.createElement('div');
+                endpointText.className = 'endpoint-text';
+
+                // Create copy button
+                const copyEndpointBtn = document.createElement('button');
+                copyEndpointBtn.className = 'copy-endpoint-btn';
+                copyEndpointBtn.textContent = 'Copy';
+                copyEndpointBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent event bubbling
+                    navigator.clipboard.writeText(endpoint)
+                        .then(() => showNotification('Endpoint copied to clipboard!', 'success', 2000))
+                        .catch(err => showNotification('Failed to copy: ' + err, 'error', 3000));
+                };
+
+                const endpointLabel = document.createTextNode(`${label}: `);
+                const endpointCode = document.createElement('code');
+                endpointCode.className = 'endpoint-code';
+                endpointCode.textContent = endpoint;
+
+                // Combine elements
+                endpointText.appendChild(endpointLabel);
+                endpointText.appendChild(copyEndpointBtn);
+                endpointText.appendChild(endpointCode);
+                endpointRow.appendChild(endpointText);
+                return endpointRow;
             };
-            
-            const endpointLabel = document.createTextNode('Endpoint: ');
-            const endpointCode = document.createElement('code');
-            endpointCode.className = 'endpoint-code';
-            endpointCode.textContent = gateway.gateway_endpoint;
-            
+
             // Create description (bracketed content now on a new line)
             const endpointDescription = document.createElement('div');
             endpointDescription.className = 'endpoint-description';
-            endpointDescription.textContent = 'This is the MCP server endpoint. Please connect to this endpoint.';
-            
-            // Combine elements
-            endpointText.appendChild(endpointLabel);
-            endpointText.appendChild(copyEndpointBtn);
-            endpointText.appendChild(endpointCode);
-            endpointRow.appendChild(endpointText);
-            
-            paths.appendChild(endpointRow);
+            endpointDescription.textContent = 'Connect to the Streamable HTTP endpoint. Use the SSE endpoint only for clients that do not support Streamable HTTP yet.';
+
+            paths.appendChild(createEndpointRow('Streamable HTTP', gateway.gateway_endpoint));
+            paths.appendChild(createEndpointRow('SSE (legacy)', gateway.sse_endpoint));
             paths.appendChild(endpointDescription);
             
             nameAndPaths.appendChild(paths);

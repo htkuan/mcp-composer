@@ -95,6 +95,7 @@ class Config:
                 args = config_data.get("args", [])
                 env = config_data.get("env")
                 url = config_data.get("url")
+                connection_type = config_data.get("type")
 
                 if not command and not url:
                     config_logger.warning(
@@ -102,11 +103,16 @@ class Config:
                     )
                     continue
 
-                # You could potentially read other fields like timeout, transportType here
+                # You could potentially read other fields like timeout here
                 # if DownstreamMCPServerConfig requires them.
 
                 c = DownstreamMCPServerConfig(
-                    name=name, command=command, args=args, env=env, url=url
+                    name=name,
+                    type=connection_type,
+                    command=command,
+                    args=args,
+                    env=env,
+                    url=url,
                 )
                 configs.append(c)
 

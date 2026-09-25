@@ -14,8 +14,12 @@
         "@modelcontextprotocol/server-everything"
       ]
     },
-    "mcp-sse": {
+    "remote-http": {
       "url": "http://127.0.0.1:8001/mcp"
+    },
+    "remote-sse": {
+      "type": "sse",
+      "url": "http://127.0.0.1:8002/sse"
     },
     "postgres": {
       "command": "docker",
