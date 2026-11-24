@@ -7,9 +7,10 @@ MCP Composer is a gateway service that **centrally manages** all your MCP server
 ## Key Features
 
 *   **Dynamic MCP Server Management**: Dynamically manages connections to multiple MCP servers and their tools, enabling on-the-fly activation or deactivation of services.
-*   **Unified MCP Endpoint**: Exposes a single Streamable HTTP endpoint (supporting the latest MCP protocol `2026-07-28` as well as earlier revisions) that provides access to all capabilities of the managed MCP servers. A legacy SSE endpoint is also available for clients that do not support Streamable HTTP yet.
+*   **Unified MCP Endpoint**: Exposes a single Streamable HTTP endpoint (supporting the latest MCP protocol `2026-07-28` as well as earlier revisions) that provides access to all capabilities of the managed MCP servers. A legacy HTTP+SSE endpoint is also available for clients that do not support Streamable HTTP yet.
 *   **Multiple Dynamic Endpoints**: Supports dynamic creation and removal of multiple gateway endpoints to accommodate different AI agents or AI tools.
 *   **Independent Interface Configuration**: Each gateway independently manages its own combination of MCP servers and tools, allowing for customized service provision.
+*   **Live Tool Updates**: Enabling or disabling a gateway, server, or tool notifies connected clients with `notifications/tools/list_changed` (over `subscriptions/listen` on `2026-07-28`, or the standalone stream on earlier revisions), so they refresh their tool list without reconnecting.
 
 ## System Architecture
 
@@ -70,6 +71,7 @@ Before running the application, you need to configure the target MCP servers.
     - `PORT`: Server port (default: 8000)
     - `MCP_COMPOSER_PROXY_URL`: MCP Composer proxy URL (default: http://localhost:8000)
     - `MCP_SERVERS_CONFIG_PATH`: Path to the MCP servers configuration file (default: ./mcp_servers.json)
+    - `MCP_ALLOWED_ORIGINS`: Comma-separated list of `Origin` values allowed to reach the MCP endpoints, to protect against DNS rebinding as the MCP spec requires. Requests with any other `Origin` get `403 Forbidden`; requests without an `Origin` header (non-browser MCP clients) are always allowed. An entry ending in `:*` matches any port. Defaults to the origin of `MCP_COMPOSER_PROXY_URL` plus `localhost` / `127.0.0.1` / `[::1]` on any port. Set to `*` to disable the check.
 
 ## Running
 
@@ -86,7 +88,9 @@ After the service starts, you can interact with the API through the API document
 Each gateway exposes two MCP endpoints (the default gateway is named `composer`):
 
 *   **Streamable HTTP** (recommended): `http://127.0.0.1:8000/mcp/{gateway_name}/mcp`
-*   **SSE** (legacy): `http://127.0.0.1:8000/mcp/{gateway_name}/sse`
+*   **HTTP+SSE** (deprecated): `http://127.0.0.1:8000/mcp/{gateway_name}/sse`. The MCP spec classifies this transport as Deprecated as of `2026-07-28` and it may be removed in a future revision; use it only for clients that cannot speak Streamable HTTP.
+
+Calling a tool that does not exist or is disabled in the gateway returns a JSON-RPC `-32602` (Invalid params) error. Errors raised by the downstream server while running a tool are returned as a tool result with `isError: true`.
 
 ## Running with Docker Compose
 

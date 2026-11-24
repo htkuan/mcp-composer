@@ -70,32 +70,43 @@ class Composer:
     async def disable_server_kit(self, name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.disable_kit()
+        await self._notify_tools_changed(name)
         return server_kit
 
     async def enable_server_kit(self, name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.enable_kit()
+        await self._notify_tools_changed(name)
         return server_kit
 
     async def disable_server(self, name: str, server_name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.disable_server(server_name)
+        await self._notify_tools_changed(name)
         return server_kit
 
     async def enable_server(self, name: str, server_name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.enable_server(server_name)
+        await self._notify_tools_changed(name)
         return server_kit
 
     async def disable_tool(self, name: str, tool_name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.disable_tool(tool_name)
+        await self._notify_tools_changed(name)
         return server_kit
 
     async def enable_tool(self, name: str, tool_name: str) -> ServerKit:
         server_kit = self.server_kits_map[name]
         server_kit.enable_tool(tool_name)
+        await self._notify_tools_changed(name)
         return server_kit
+
+    async def _notify_tools_changed(self, name: str) -> None:
+        gateway = self.gateway_map.get(name)
+        if gateway is not None:
+            await gateway.notify_tools_changed()
 
     # Gateway
     async def list_gateways(self) -> list[Gateway]:
@@ -113,6 +124,7 @@ class Composer:
             server_kit,
             self.downstream_controller,
             self.config.mcp_composer_proxy_url,
+            self.config.mcp_allowed_origins,
         )
         await self._task_group.start(gateway.run)
         self.gateway_map[server_kit.name] = gateway
