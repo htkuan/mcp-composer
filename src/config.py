@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from domain.downstream_server import DownstreamMCPServerConfig
+from origin_validation import ALLOW_ANY_ORIGIN, DEFAULT_LOCAL_ORIGINS, origin_of
 
 # load .env file
 load_dotenv()
@@ -76,6 +77,29 @@ class Config:
         self.mcp_composer_proxy_url = os.environ.get(
             "MCP_COMPOSER_PROXY_URL", "http://localhost:8000"
         )
+        # Allowed Origin headers for the MCP endpoints (DNS rebinding protection)
+        self.mcp_allowed_origins = self._get_allowed_origins(
+            os.environ.get("MCP_ALLOWED_ORIGINS")
+        )
+
+    def _get_allowed_origins(self, raw: str | None) -> list[str] | None:
+        """Builds the Origin allow-list; None disables Origin validation.
+
+        Defaults to the proxy URL's origin plus localhost on any port.
+        """
+        if raw is not None and raw.strip():
+            origins = [o.strip() for o in raw.split(",") if o.strip()]
+            if ALLOW_ANY_ORIGIN in origins:
+                config_logger.warning(
+                    "MCP_ALLOWED_ORIGINS contains '*': Origin validation is disabled"
+                )
+                return None
+            return origins
+        origins = list(DEFAULT_LOCAL_ORIGINS)
+        proxy_origin = origin_of(self.mcp_composer_proxy_url)
+        if proxy_origin and proxy_origin not in origins:
+            origins.append(proxy_origin)
+        return origins
 
     def _get_config_path(self, env_var: str, default_path: str) -> Path:
         """Determines the configuration file path to use."""
